@@ -1,0 +1,511 @@
+[
+  {
+    "type": "constructor",
+    "inputs": [
+      {
+        "name": "pool",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "addressesProvider",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "ADDRESSES_PROVIDER",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "address",
+        "internalType": "contract IPoolAddressesProvider"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "POOL",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "address",
+        "internalType": "contract IPool"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "getCollateralFullInfo",
+    "inputs": [
+      {
+        "name": "user",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "collateralAsset",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "tuple",
+        "internalType": "struct ILiquidationDataProvider.CollateralFullInfo",
+        "components": [
+          {
+            "name": "aToken",
+            "type": "address",
+            "internalType": "address"
+          },
+          {
+            "name": "collateralBalance",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "collateralBalanceInBaseCurrency",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "price",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "assetUnit",
+            "type": "uint256",
+            "internalType": "uint256"
+          }
+        ]
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "getDebtFullInfo",
+    "inputs": [
+      {
+        "name": "user",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "debtAsset",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "tuple",
+        "internalType": "struct ILiquidationDataProvider.DebtFullInfo",
+        "components": [
+          {
+            "name": "variableDebtToken",
+            "type": "address",
+            "internalType": "address"
+          },
+          {
+            "name": "debtBalance",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "debtBalanceInBaseCurrency",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "price",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "assetUnit",
+            "type": "uint256",
+            "internalType": "uint256"
+          }
+        ]
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "getLiquidationInfo",
+    "inputs": [
+      {
+        "name": "user",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "collateralAsset",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "debtAsset",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "tuple",
+        "internalType": "struct ILiquidationDataProvider.LiquidationInfo",
+        "components": [
+          {
+            "name": "userInfo",
+            "type": "tuple",
+            "internalType": "struct ILiquidationDataProvider.UserPositionFullInfo",
+            "components": [
+              {
+                "name": "totalCollateralInBaseCurrency",
+                "type": "uint256",
+                "internalType": "uint256"
+              },
+              {
+                "name": "totalDebtInBaseCurrency",
+                "type": "uint256",
+                "internalType": "uint256"
+              },
+              {
+                "name": "availableBorrowsInBaseCurrency",
+                "type": "uint256",
+                "internalType": "uint256"
+              },
+              {
+                "name": "currentLiquidationThreshold",
+                "type": "uint256",
+                "internalType": "uint256"
+              },
+              {
+                "name": "ltv",
+                "type": "uint256",
+                "internalType": "uint256"
+              },
+              {
+                "name": "healthFactor",
+                "type": "uint256",
+                "internalType": "uint256"
+              }
+            ]
+          },
+          {
+            "name": "collateralInfo",
+            "type": "tuple",
+            "internalType": "struct ILiquidationDataProvider.CollateralFullInfo",
+            "components": [
+              {
+                "name": "aToken",
+                "type": "address",
+                "internalType": "address"
+              },
+              {
+                "name": "collateralBalance",
+                "type": "uint256",
+                "internalType": "uint256"
+              },
+              {
+                "name": "collateralBalanceInBaseCurrency",
+                "type": "uint256",
+                "internalType": "uint256"
+              },
+              {
+                "name": "price",
+                "type": "uint256",
+                "internalType": "uint256"
+              },
+              {
+                "name": "assetUnit",
+                "type": "uint256",
+                "internalType": "uint256"
+              }
+            ]
+          },
+          {
+            "name": "debtInfo",
+            "type": "tuple",
+            "internalType": "struct ILiquidationDataProvider.DebtFullInfo",
+            "components": [
+              {
+                "name": "variableDebtToken",
+                "type": "address",
+                "internalType": "address"
+              },
+              {
+                "name": "debtBalance",
+                "type": "uint256",
+                "internalType": "uint256"
+              },
+              {
+                "name": "debtBalanceInBaseCurrency",
+                "type": "uint256",
+                "internalType": "uint256"
+              },
+              {
+                "name": "price",
+                "type": "uint256",
+                "internalType": "uint256"
+              },
+              {
+                "name": "assetUnit",
+                "type": "uint256",
+                "internalType": "uint256"
+              }
+            ]
+          },
+          {
+            "name": "maxCollateralToLiquidate",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "maxDebtToLiquidate",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "liquidationProtocolFee",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "amountToPassToLiquidationCall",
+            "type": "uint256",
+            "internalType": "uint256"
+          }
+        ]
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "getLiquidationInfo",
+    "inputs": [
+      {
+        "name": "user",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "collateralAsset",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "debtAsset",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "debtLiquidationAmount",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "tuple",
+        "internalType": "struct ILiquidationDataProvider.LiquidationInfo",
+        "components": [
+          {
+            "name": "userInfo",
+            "type": "tuple",
+            "internalType": "struct ILiquidationDataProvider.UserPositionFullInfo",
+            "components": [
+              {
+                "name": "totalCollateralInBaseCurrency",
+                "type": "uint256",
+                "internalType": "uint256"
+              },
+              {
+                "name": "totalDebtInBaseCurrency",
+                "type": "uint256",
+                "internalType": "uint256"
+              },
+              {
+                "name": "availableBorrowsInBaseCurrency",
+                "type": "uint256",
+                "internalType": "uint256"
+              },
+              {
+                "name": "currentLiquidationThreshold",
+                "type": "uint256",
+                "internalType": "uint256"
+              },
+              {
+                "name": "ltv",
+                "type": "uint256",
+                "internalType": "uint256"
+              },
+              {
+                "name": "healthFactor",
+                "type": "uint256",
+                "internalType": "uint256"
+              }
+            ]
+          },
+          {
+            "name": "collateralInfo",
+            "type": "tuple",
+            "internalType": "struct ILiquidationDataProvider.CollateralFullInfo",
+            "components": [
+              {
+                "name": "aToken",
+                "type": "address",
+                "internalType": "address"
+              },
+              {
+                "name": "collateralBalance",
+                "type": "uint256",
+                "internalType": "uint256"
+              },
+              {
+                "name": "collateralBalanceInBaseCurrency",
+                "type": "uint256",
+                "internalType": "uint256"
+              },
+              {
+                "name": "price",
+                "type": "uint256",
+                "internalType": "uint256"
+              },
+              {
+                "name": "assetUnit",
+                "type": "uint256",
+                "internalType": "uint256"
+              }
+            ]
+          },
+          {
+            "name": "debtInfo",
+            "type": "tuple",
+            "internalType": "struct ILiquidationDataProvider.DebtFullInfo",
+            "components": [
+              {
+                "name": "variableDebtToken",
+                "type": "address",
+                "internalType": "address"
+              },
+              {
+                "name": "debtBalance",
+                "type": "uint256",
+                "internalType": "uint256"
+              },
+              {
+                "name": "debtBalanceInBaseCurrency",
+                "type": "uint256",
+                "internalType": "uint256"
+              },
+              {
+                "name": "price",
+                "type": "uint256",
+                "internalType": "uint256"
+              },
+              {
+                "name": "assetUnit",
+                "type": "uint256",
+                "internalType": "uint256"
+              }
+            ]
+          },
+          {
+            "name": "maxCollateralToLiquidate",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "maxDebtToLiquidate",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "liquidationProtocolFee",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "amountToPassToLiquidationCall",
+            "type": "uint256",
+            "internalType": "uint256"
+          }
+        ]
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "getUserPositionFullInfo",
+    "inputs": [
+      {
+        "name": "user",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "tuple",
+        "internalType": "struct ILiquidationDataProvider.UserPositionFullInfo",
+        "components": [
+          {
+            "name": "totalCollateralInBaseCurrency",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "totalDebtInBaseCurrency",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "availableBorrowsInBaseCurrency",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "currentLiquidationThreshold",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "ltv",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "healthFactor",
+            "type": "uint256",
+            "internalType": "uint256"
+          }
+        ]
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "error",
+    "name": "InvalidReserveIndex",
+    "inputs": []
+  }
+]

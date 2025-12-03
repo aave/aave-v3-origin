@@ -110,15 +110,15 @@ func GetLiquidationInfoWithAmount(
   if err != nil {
     return nil, err
   }
-  if isZero(debtInfo.DebtBalance) || isZero(collateralInfo.CollateralBalance) {
-    return nil, fmt.Errorf("debtBalance or collateralBalance is zero")
+  if isZero(debtInfo.DebtBalance) {
+    return liquidationInfo, nil
   }
 
   liquidationInfo.CollateralInfo = collateralInfo
   liquidationInfo.DebtInfo = debtInfo
 
   if !canLiquidateHealthFactor(liquidationInfo.UserInfo.HealthFactor, input.Global.LiquidationAllowed) {
-    return nil, fmt.Errorf("not liquidatable")
+    return liquidationInfo, nil
   }
 
   collateralReserve, ok := input.Reserves[collateralAsset]
@@ -132,11 +132,11 @@ func GetLiquidationInfoWithAmount(
 
   if !isReserveReadyForLiquidations(collateralReserve, true, input.Global.CurrentTimestamp) ||
     !isReserveReadyForLiquidations(debtReserve, false, input.Global.CurrentTimestamp) {
-    return nil, fmt.Errorf("reserve not ready for liquidation")
+    return liquidationInfo, nil
   }
 
   if !isCollateralEnabledForUser(input.User, collateralReserve) {
-    return nil, fmt.Errorf("collateral not enabled for usaer")
+    return liquidationInfo, nil
   }
 
   liquidationBonus := getLiquidationBonus(input, collateralReserve)
