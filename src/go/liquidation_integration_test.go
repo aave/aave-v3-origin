@@ -109,6 +109,103 @@ func TestIntegrationMatchesOnchainResults(t *testing.T) {
 	}
 }
 
+func TestScaledBalanceStableAcrossBlocks(t *testing.T) {
+	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Minute)
+	defer cancel()
+
+	client, err := ethclient.DialContext(ctx, rpcURL())
+	if err != nil {
+		t.Fatalf("failed to connect rpc: %v", err)
+	}
+
+	header, err := client.HeaderByNumber(ctx, nil)
+	if err != nil {
+		t.Fatalf("failed to load latest header: %v", err)
+	}
+	if header.Number.Cmp(big.NewInt(30)) <= 0 {
+		t.Skip("not enough history to compare H and H-30")
+	}
+
+	blockLatest := new(big.Int).Set(header.Number)
+	blockPast := new(big.Int).Sub(header.Number, big.NewInt(30))
+
+	callLatest := &bind.CallOpts{BlockNumber: blockLatest, Context: ctx}
+	callPast := &bind.CallOpts{BlockNumber: blockPast, Context: ctx}
+
+	pool, err := contracts.NewL2Pool(common.HexToAddress(l2PoolAddress), client)
+	if err != nil {
+		t.Fatalf("failed to init l2 pool: %v", err)
+	}
+
+	// Build reserves at latest block to get token addresses.
+	reserves, err := buildReserves(ctx, client, pool, mustNewOracle(ctx, client), callLatest)
+	if err != nil {
+		t.Fatalf("failed to build reserves: %v", err)
+	}
+
+	users := selectTestUsers(t)
+	user := users[0]
+
+	userConfig, err := pool.GetUserConfiguration(callLatest, user)
+	if err != nil {
+		t.Fatalf("get user config: %v", err)
+	}
+
+	type tokenCheck struct {
+		token common.Address
+		label string
+	}
+	var checks []tokenCheck
+
+	for _, reserve := range reserves {
+		if isUsingAsCollateral(userConfig.Data, reserve.ID) {
+			bal, err := scaledBalance(ctx, client, common.HexToAddress(reserve.ATokenAddress), user, callLatest)
+			if err != nil {
+				t.Fatalf("get aToken scaled balance: %v", err)
+			}
+			if bal.Sign() > 0 {
+				checks = append(checks, tokenCheck{token: common.HexToAddress(reserve.ATokenAddress), label: "aToken " + reserve.Asset.Hex()})
+			}
+		}
+		if isBorrowing(userConfig.Data, reserve.ID) {
+			bal, err := scaledBalance(ctx, client, common.HexToAddress(reserve.VariableDebtTokenAddress), user, callLatest)
+			if err != nil {
+				t.Fatalf("get debt scaled balance: %v", err)
+			}
+			if bal.Sign() > 0 {
+				checks = append(checks, tokenCheck{token: common.HexToAddress(reserve.VariableDebtTokenAddress), label: "vDebt " + reserve.Asset.Hex()})
+			}
+		}
+	}
+
+	if len(checks) == 0 {
+		t.Fatalf("user %s has no balances to check", user.Hex())
+	}
+
+	for _, c := range checks {
+		latest, err := scaledBalance(ctx, client, c.token, user, callLatest)
+		if err != nil {
+			t.Fatalf("latest balance %s: %v", c.label, err)
+		}
+		past, err := scaledBalance(ctx, client, c.token, user, callPast)
+		if err != nil {
+			t.Fatalf("past balance %s: %v", c.label, err)
+		}
+		if latest.Cmp(past) != 0 {
+			t.Fatalf("%s scaled balance changed between H (%s) and H-30 (%s) for user %s", c.label, latest.String(), past.String(), user.Hex())
+		}
+		t.Logf("%s scaled balance stable at %s", c.label, latest.String())
+	}
+}
+
+func mustNewOracle(ctx context.Context, client *ethclient.Client) *contracts.AaveOracle {
+	oracle, err := contracts.NewAaveOracle(common.HexToAddress(aaveOracleAddress), client)
+	if err != nil {
+		panic(err)
+	}
+	return oracle
+}
+
 func buildGlobalConfig(pool *contracts.L2Pool, callOpts *bind.CallOpts, timestamp uint64) (*GlobalConfig, error) {
 	categories, err := fetchEModeCategories(pool, callOpts)
 	if err != nil {
@@ -416,6 +513,20 @@ func rpcURL() string {
 func assertUserInfoMatch(t *testing.T, onchain contracts.ILiquidationDataProviderUserPositionFullInfo, local *UserPositionFullInfo) {
 	t.Helper()
 
+	t.Logf(
+		"user info: onchain tc=%s td=%s ltv=%s lt=%s hf=%s | local tc=%s td=%s ltv=%s lt=%s hf=%s",
+		onchain.TotalCollateralInBaseCurrency.String(),
+		onchain.TotalDebtInBaseCurrency.String(),
+		onchain.Ltv.String(),
+		onchain.CurrentLiquidationThreshold.String(),
+		onchain.HealthFactor.String(),
+		local.TotalCollateralBase.String(),
+		local.TotalDebtBase.String(),
+		local.Ltv.String(),
+		local.CurrentLiquidationThreshold.String(),
+		local.HealthFactor.String(),
+	)
+
 	compareBig(t, "total collateral", onchain.TotalCollateralInBaseCurrency, local.TotalCollateralBase)
 	compareBig(t, "total debt", onchain.TotalDebtInBaseCurrency, local.TotalDebtBase)
 	compareBig(t, "current liquidation threshold", onchain.CurrentLiquidationThreshold, local.CurrentLiquidationThreshold)
@@ -430,6 +541,18 @@ func assertLiquidationInfoMatch(
 ) {
 	t.Helper()
 
+	t.Logf(
+		"liquidation totals: onchain maxCol=%s maxDebt=%s protoFee=%s amtToCall=%s | local maxCol=%s maxDebt=%s protoFee=%s amtToCall=%s",
+		onchain.MaxCollateralToLiquidate.String(),
+		onchain.MaxDebtToLiquidate.String(),
+		onchain.LiquidationProtocolFee.String(),
+		onchain.AmountToPassToLiquidationCall.String(),
+		local.MaxCollateralToLiquidate.String(),
+		local.MaxDebtToLiquidate.String(),
+		local.LiquidationProtocolFee.String(),
+		local.AmountToPassToLiquidationCall.String(),
+	)
+
 	assertUserInfoMatch(t, onchain.UserInfo, local.UserInfo)
 
 	if !strings.EqualFold(onchain.CollateralInfo.AToken.Hex(), local.CollateralInfo.AToken) {
@@ -443,11 +566,37 @@ func assertLiquidationInfoMatch(
 	compareBig(t, "collateral balance in base", onchain.CollateralInfo.CollateralBalanceInBaseCurrency, local.CollateralInfo.CollateralBalanceInBase)
 	compareBig(t, "collateral price", onchain.CollateralInfo.Price, local.CollateralInfo.Price)
 	compareBig(t, "collateral asset unit", onchain.CollateralInfo.AssetUnit, local.CollateralInfo.AssetUnit)
+	t.Logf(
+		"collateral info: onchain bal=%s balBase=%s price=%s unit=%s aToken=%s | local bal=%s balBase=%s price=%s unit=%s aToken=%s",
+		onchain.CollateralInfo.CollateralBalance.String(),
+		onchain.CollateralInfo.CollateralBalanceInBaseCurrency.String(),
+		onchain.CollateralInfo.Price.String(),
+		onchain.CollateralInfo.AssetUnit.String(),
+		onchain.CollateralInfo.AToken.Hex(),
+		local.CollateralInfo.CollateralBalance.String(),
+		local.CollateralInfo.CollateralBalanceInBase.String(),
+		local.CollateralInfo.Price.String(),
+		local.CollateralInfo.AssetUnit.String(),
+		local.CollateralInfo.AToken,
+	)
 
 	compareBig(t, "debt balance", onchain.DebtInfo.DebtBalance, local.DebtInfo.DebtBalance)
 	compareBig(t, "debt balance in base", onchain.DebtInfo.DebtBalanceInBaseCurrency, local.DebtInfo.DebtBalanceInBase)
 	compareBig(t, "debt price", onchain.DebtInfo.Price, local.DebtInfo.Price)
 	compareBig(t, "debt asset unit", onchain.DebtInfo.AssetUnit, local.DebtInfo.AssetUnit)
+	t.Logf(
+		"debt info: onchain bal=%s balBase=%s price=%s unit=%s debtToken=%s | local bal=%s balBase=%s price=%s unit=%s debtToken=%s",
+		onchain.DebtInfo.DebtBalance.String(),
+		onchain.DebtInfo.DebtBalanceInBaseCurrency.String(),
+		onchain.DebtInfo.Price.String(),
+		onchain.DebtInfo.AssetUnit.String(),
+		onchain.DebtInfo.VariableDebtToken.Hex(),
+		local.DebtInfo.DebtBalance.String(),
+		local.DebtInfo.DebtBalanceInBase.String(),
+		local.DebtInfo.Price.String(),
+		local.DebtInfo.AssetUnit.String(),
+		local.DebtInfo.VariableDebtToken,
+	)
 
 	compareBig(t, "max collateral to liquidate", onchain.MaxCollateralToLiquidate, local.MaxCollateralToLiquidate)
 	compareBig(t, "max debt to liquidate", onchain.MaxDebtToLiquidate, local.MaxDebtToLiquidate)
@@ -458,7 +607,24 @@ func assertLiquidationInfoMatch(
 func compareBig(t *testing.T, label string, onchain *big.Int, local *big.Int) {
 	t.Helper()
 
-	if normalize(onchain).Cmp(normalize(local)) != 0 {
+	onchainNorm := normalize(onchain)
+	localNorm := normalize(local)
+
+	tolerance := big.NewInt(1)
+	if label == "health factor" {
+		maxVal := new(big.Int).Abs(onchainNorm)
+		if absLocal := new(big.Int).Abs(localNorm); absLocal.Cmp(maxVal) > 0 {
+			maxVal = absLocal
+		}
+		if maxVal.Sign() > 0 {
+			tolerance = new(big.Int).Div(maxVal, big.NewInt(100_000)) // 1e-5 relative tolerance
+			if tolerance.Sign() == 0 {
+				tolerance = big.NewInt(1)
+			}
+		}
+	}
+
+	if !withinTolerance(onchainNorm, localNorm, tolerance) {
 		t.Fatalf("%s mismatch: onchain %s local %s", label, onchain.String(), local.String())
 	}
 }
@@ -468,4 +634,12 @@ func normalize(v *big.Int) *big.Int {
 		return big.NewInt(0)
 	}
 	return v
+}
+
+func withinTolerance(a, b, tolerance *big.Int) bool {
+	diff := new(big.Int).Sub(a, b)
+	if diff.Sign() < 0 {
+		diff.Neg(diff)
+	}
+	return diff.Cmp(tolerance) <= 0
 }

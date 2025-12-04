@@ -9,12 +9,12 @@ import (
 var (
 	percentageFactor                    = big.NewInt(10_000)
 	halfPercentageFactor                = big.NewInt(5_000)
-	wad                                 = big.NewInt(1_000_000_000_000_000_000)             // 1e18
-	halfWad                             = big.NewInt(500_000_000_000_000_000)               // 0.5e18
-	ray                                 = big.NewInt(1_000_000_000_000_000_000_000_000_000) // 1e27
-	halfRay                             = big.NewInt(500_000_000_000_000_000_000_000_000)   // 0.5e27
-	defaultLiquidationCloseFactor       = big.NewInt(5_000)                                 // 0.5e4
-	closeFactorHFThreshold              = big.NewInt(950_000_000_000_000_000)               // 0.95e18
+	wad                                 = big.NewInt(1_000_000_000_000_000_000)                                                              // 1e18
+	halfWad                             = big.NewInt(500_000_000_000_000_000)                                                                // 0.5e18
+	ray                                 = func() *big.Int { v, _ := new(big.Int).SetString("1000000000000000000000000000", 10); return v }() // 1e27
+	halfRay                             = func() *big.Int { v, _ := new(big.Int).SetString("500000000000000000000000000", 10); return v }()  // 0.5e27
+	defaultLiquidationCloseFactor       = big.NewInt(5_000)                                                                                  // 0.5e4
+	closeFactorHFThreshold              = big.NewInt(950_000_000_000_000_000)                                                                // 0.95e18
 	healthFactorLiquidationThreshold    = big.NewInt(1_000_000_000_000_000_000)
 	minHealthFactorLiquidationThreshold = big.NewInt(950_000_000_000_000_000) // 0.95e18
 	minBaseMaxCloseFactorThreshold      = big.NewInt(200_000_000_000)         // 2000e8
