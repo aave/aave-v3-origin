@@ -11,6 +11,7 @@ on:
   pull_request:
   push:
     branches: [main]
+  workflow_dispatch:
 
 permissions:
   contents: write
@@ -40,7 +41,10 @@ jobs:
           'src/contracts/helpers/UiIncentiveDataProviderV3.sol' \
           'src/contracts/helpers/UiPoolDataProviderV3.sol' \
           'src/contracts/helpers/WalletBalanceProvider.sol' \
-          'src/contracts/dependencies/*'
+          'src/contracts/dependencies/*' \
+          'src/contracts/instances/PoolInstance.sol' \
+          'src/contracts/instances/VariableDebtTokenMainnetInstanceGHO.sol' \
+          'src/contracts/instances/PoolConfiguratorInstance.sol'
 
       - name: Upload coverage reports to Codecov
         uses: codecov/codecov-action@ea99328d1c4d5f39fda7cbffe104afd6906c50b0
