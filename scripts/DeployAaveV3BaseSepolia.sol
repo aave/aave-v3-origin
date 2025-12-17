@@ -13,6 +13,8 @@ import {TestnetERC20} from '../src/contracts/mocks/testnet-helpers/TestnetERC20.
 import {IERC20} from '../src/contracts/dependencies/openzeppelin/contracts/IERC20.sol';
 import {IPool} from '../src/contracts/interfaces/IPool.sol';
 import {IACLManager} from '../src/contracts/interfaces/IACLManager.sol';
+import {IPoolAddressesProvider} from '../src/contracts/interfaces/IPoolAddressesProvider.sol';
+import {LiquidationDataProvider} from '../src/contracts/helpers/LiquidationDataProvider.sol';
 import {MarketReport, MarketConfig, DeployFlags, Roles} from '../src/deployments/interfaces/IMarketReportTypes.sol';
 
 struct DeployedAssets {
@@ -141,6 +143,11 @@ contract DeployAaveV3BaseSepolia is Script {
     IACLManager(report.aclManager).addRiskAdmin(address(configEngine));
     configEngine.listAssetsCustom(context, listings);
 
+    LiquidationDataProvider liquidationDataProvider = new LiquidationDataProvider(
+      report.poolProxy,
+      report.poolAddressesProvider
+    );
+
     // Log outputs for convenience
     console.log('Deployer', deployer);
     console.log('USDC', address(a.usdc));
@@ -155,6 +162,7 @@ contract DeployAaveV3BaseSepolia is Script {
     console.log('Pool', report.poolProxy);
     console.log('ConfigEngine', report.configEngine);
     console.log('AaveOracle', report.aaveOracle);
+    console.log('LiquidationDataProvider', address(liquidationDataProvider));
 
     // Ensure sequencer oracle timestamp is older than grace period to allow borrowing
     a.sequencerOracle.setAnswer(false, block.timestamp - 2 hours);
