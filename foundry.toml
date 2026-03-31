@@ -66,6 +66,7 @@ linea = "${RPC_LINEA}"
 sonic = "${RPC_SONIC}"
 soneium = "${RPC_SONEIUM}"
 zksync = "${RPC_ZKSYNC}"
+monad = "${RPC_MONAD}"
 
 [etherscan]
 mainnet = { key = "${ETHERSCAN_API_KEY_MAINNET}", chainId = 1 }
@@ -84,5 +85,10 @@ bnb = { key = "${ETHERSCAN_API_KEY_BNB}", chainId = 56, url = 'https://api.bscsc
 base = { key = "${ETHERSCAN_API_KEY_BASE}", chain = 8453 }
 gnosis = { key = "${ETHERSCAN_API_KEY_GNOSIS}", chainId = 100 }
 metis = { key = "", chainId = 1088, url = 'https://api.routescan.io/v2/network/mainnet/evm/1088/etherscan/api' }
+monad = { key = "${MONADSCAN_API_KEY}", url = "https://api.monadscan.com/api", chainId = 143 }
+
+[profile.monad]
+# Monad is Cancun-compatible; the default Shanghai evm_version is sufficient
+# since Aave V3 does not use Cancun-specific opcodes.
 
 # See more config options https://github.com/gakonst/foundry/tree/master/config
