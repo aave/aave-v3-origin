@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity ^0.8.0;
 
-import {DeployAaveV3MarketBatchedBase} from './misc/DeployAaveV3MarketBatchedBase.sol';
-import {K613ArbitrumMarketInput} from '../src/deployments/inputs/K613ArbitrumMarketInput.sol';
+import {DeployAaveV3MarketBatchedBase} from "./misc/DeployAaveV3MarketBatchedBase.sol";
+import {K613ArbitrumMarketInput} from "../src/deployments/inputs/K613ArbitrumMarketInput.sol";
 
 /**
  * @title DeployArbitrumSepoliaMarket

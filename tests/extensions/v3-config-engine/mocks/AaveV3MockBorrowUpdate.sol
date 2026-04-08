@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity ^0.8.0;
 
-import '../../../../src/contracts/extensions/v3-config-engine/AaveV3Payload.sol';
+import "../../../../src/contracts/extensions/v3-config-engine/AaveV3Payload.sol";
 
 /**
  * @dev Smart contract for a mock borrow update, to be able to test
@@ -10,28 +10,28 @@ import '../../../../src/contracts/extensions/v3-config-engine/AaveV3Payload.sol'
  * @author BGD Labs
  */
 contract AaveV3MockBorrowUpdate is AaveV3Payload {
-  address public immutable ASSET_ADDRESS;
+    address public immutable ASSET_ADDRESS;
 
-  constructor(address assetAddress, address customEngine) AaveV3Payload(IEngine(customEngine)) {
-    ASSET_ADDRESS = assetAddress;
-  }
+    constructor(address assetAddress, address customEngine) AaveV3Payload(IEngine(customEngine)) {
+        ASSET_ADDRESS = assetAddress;
+    }
 
-  function borrowsUpdates() public view override returns (IEngine.BorrowUpdate[] memory) {
-    IEngine.BorrowUpdate[] memory borrowsUpdate = new IEngine.BorrowUpdate[](1);
+    function borrowsUpdates() public view override returns (IEngine.BorrowUpdate[] memory) {
+        IEngine.BorrowUpdate[] memory borrowsUpdate = new IEngine.BorrowUpdate[](1);
 
-    borrowsUpdate[0] = IEngine.BorrowUpdate({
-      asset: ASSET_ADDRESS,
-      enabledToBorrow: EngineFlags.ENABLED,
-      flashloanable: EngineFlags.DISABLED,
-      borrowableInIsolation: EngineFlags.KEEP_CURRENT,
-      withSiloedBorrowing: EngineFlags.KEEP_CURRENT,
-      reserveFactor: 15_00
-    });
+        borrowsUpdate[0] = IEngine.BorrowUpdate({
+            asset: ASSET_ADDRESS,
+            enabledToBorrow: EngineFlags.ENABLED,
+            flashloanable: EngineFlags.DISABLED,
+            borrowableInIsolation: EngineFlags.KEEP_CURRENT,
+            withSiloedBorrowing: EngineFlags.KEEP_CURRENT,
+            reserveFactor: 15_00
+        });
 
-    return borrowsUpdate;
-  }
+        return borrowsUpdate;
+    }
 
-  function getPoolContext() public pure override returns (IEngine.PoolContext memory) {
-    return IEngine.PoolContext({networkName: 'Local', networkAbbreviation: 'Loc'});
-  }
+    function getPoolContext() public pure override returns (IEngine.PoolContext memory) {
+        return IEngine.PoolContext({networkName: "Local", networkAbbreviation: "Loc"});
+    }
 }

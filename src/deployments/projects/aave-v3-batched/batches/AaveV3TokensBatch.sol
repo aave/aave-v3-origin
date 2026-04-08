@@ -1,16 +1,16 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity ^0.8.0;
 
-import {AaveV3TokensProcedure} from '../../../contracts/procedures/AaveV3TokensProcedure.sol';
+import {AaveV3TokensProcedure} from "../../../contracts/procedures/AaveV3TokensProcedure.sol";
 
 contract AaveV3TokensBatch is AaveV3TokensProcedure {
-  TokensReport internal _tokensReport;
+    TokensReport internal _tokensReport;
 
-  constructor(address poolProxy) {
-    _tokensReport = _deployAaveV3TokensImplementations(poolProxy);
-  }
+    constructor(address poolProxy) {
+        _tokensReport = _deployAaveV3TokensImplementations(poolProxy);
+    }
 
-  function getTokensReport() external view returns (TokensReport memory) {
-    return _tokensReport;
-  }
+    function getTokensReport() external view returns (TokensReport memory) {
+        return _tokensReport;
+    }
 }
