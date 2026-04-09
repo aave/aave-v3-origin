@@ -1,177 +1,125 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity ^0.8.0;
 
-import 'forge-std/Test.sol';
+import "forge-std/Test.sol";
 
-import {TestnetProcedures} from '../../utils/TestnetProcedures.sol';
-import {Errors} from '../../../src/contracts/protocol/libraries/helpers/Errors.sol';
-import {IPoolAddressesProviderRegistry} from '../../../src/contracts/interfaces/IPoolAddressesProviderRegistry.sol';
+import {TestnetProcedures} from "../../utils/TestnetProcedures.sol";
+import {Errors} from "../../../src/contracts/protocol/libraries/helpers/Errors.sol";
 
 contract PoolAddressesProviderRegistryTest is TestnetProcedures {
-  function setUp() public {
-    initTestEnvironment();
-  }
+    event AddressesProviderRegistered(address indexed addressesProvider, uint256 indexed id);
+    event AddressesProviderUnregistered(address indexed addressesProvider, uint256 indexed id);
 
-  function test_addressesProviderAddedToRegistry() public view {
-    address[] memory providers = contracts
-      .poolAddressesProviderRegistry
-      .getAddressesProvidersList();
-    assertEq(providers.length, 1);
-    assertEq(providers[0], report.poolAddressesProvider);
-  }
+    function setUp() public {
+        initTestEnvironment();
+    }
 
-  function test_revert_registry_0() public {
-    vm.expectRevert(abi.encodeWithSelector(Errors.InvalidAddressesProviderId.selector));
-    vm.prank(poolAdmin);
-    contracts.poolAddressesProviderRegistry.registerAddressesProvider(makeAddr('MOCK_PROVIDER'), 0);
-  }
+    function test_addressesProviderAddedToRegistry() public view {
+        address[] memory providers = contracts.poolAddressesProviderRegistry.getAddressesProvidersList();
+        assertEq(providers.length, 1);
+        assertEq(providers[0], report.poolAddressesProvider);
+    }
 
-  function testAddAddressesProvider() public {
-    address newAddressesProvider = makeAddr('NEW_PROVIDER');
-    uint256 newAddressesProviderId = 1010;
-    vm.expectEmit(address(contracts.poolAddressesProviderRegistry));
-    emit IPoolAddressesProviderRegistry.AddressesProviderRegistered(
-      newAddressesProvider,
-      newAddressesProviderId
-    );
+    function test_revert_registry_0() public {
+        vm.expectRevert(bytes(Errors.INVALID_ADDRESSES_PROVIDER_ID));
+        vm.prank(poolAdmin);
+        contracts.poolAddressesProviderRegistry.registerAddressesProvider(makeAddr("MOCK_PROVIDER"), 0);
+    }
 
-    vm.startPrank(poolAdmin);
-    contracts.poolAddressesProviderRegistry.registerAddressesProvider(
-      newAddressesProvider,
-      newAddressesProviderId
-    );
-    vm.stopPrank();
+    function testAddAddressesProvider() public {
+        address newAddressesProvider = makeAddr("NEW_PROVIDER");
+        uint256 newAddressesProviderId = 1010;
+        vm.expectEmit(address(contracts.poolAddressesProviderRegistry));
+        emit AddressesProviderRegistered(newAddressesProvider, newAddressesProviderId);
 
-    assertEq(
-      contracts.poolAddressesProviderRegistry.getAddressesProviderIdByAddress(newAddressesProvider),
-      newAddressesProviderId
-    );
-    assertEq(
-      contracts.poolAddressesProviderRegistry.getAddressesProviderAddressById(
-        newAddressesProviderId
-      ),
-      newAddressesProvider
-    );
-    assertEq(contracts.poolAddressesProviderRegistry.getAddressesProvidersList().length, 2);
-  }
+        vm.startPrank(poolAdmin);
+        contracts.poolAddressesProviderRegistry.registerAddressesProvider(newAddressesProvider, newAddressesProviderId);
+        vm.stopPrank();
 
-  function testRemoveAddressesProvider() public {
-    address newAddressesProvider = makeAddr('NEW_PROVIDER');
-    uint256 newAddressesProviderId = 2020;
+        assertEq(
+            contracts.poolAddressesProviderRegistry.getAddressesProviderIdByAddress(newAddressesProvider),
+            newAddressesProviderId
+        );
+        assertEq(
+            contracts.poolAddressesProviderRegistry.getAddressesProviderAddressById(newAddressesProviderId),
+            newAddressesProvider
+        );
+        assertEq(contracts.poolAddressesProviderRegistry.getAddressesProvidersList().length, 2);
+    }
 
-    vm.expectEmit(address(contracts.poolAddressesProviderRegistry));
-    emit IPoolAddressesProviderRegistry.AddressesProviderRegistered(
-      newAddressesProvider,
-      newAddressesProviderId
-    );
+    function testRemoveAddressesProvider() public {
+        address newAddressesProvider = makeAddr("NEW_PROVIDER");
+        uint256 newAddressesProviderId = 2020;
 
-    vm.startPrank(poolAdmin);
-    contracts.poolAddressesProviderRegistry.registerAddressesProvider(
-      newAddressesProvider,
-      newAddressesProviderId
-    );
+        vm.expectEmit(address(contracts.poolAddressesProviderRegistry));
+        emit AddressesProviderRegistered(newAddressesProvider, newAddressesProviderId);
 
-    vm.expectEmit(address(contracts.poolAddressesProviderRegistry));
-    emit IPoolAddressesProviderRegistry.AddressesProviderUnregistered(
-      newAddressesProvider,
-      newAddressesProviderId
-    );
+        vm.startPrank(poolAdmin);
+        contracts.poolAddressesProviderRegistry.registerAddressesProvider(newAddressesProvider, newAddressesProviderId);
 
-    contracts.poolAddressesProviderRegistry.unregisterAddressesProvider(newAddressesProvider);
-    vm.stopPrank();
+        vm.expectEmit(address(contracts.poolAddressesProviderRegistry));
+        emit AddressesProviderUnregistered(newAddressesProvider, newAddressesProviderId);
 
-    assertEq(contracts.poolAddressesProviderRegistry.getAddressesProvidersList().length, 1);
-    assertEq(
-      contracts.poolAddressesProviderRegistry.getAddressesProviderIdByAddress(newAddressesProvider),
-      0
-    );
-    assertEq(
-      contracts.poolAddressesProviderRegistry.getAddressesProviderAddressById(
-        newAddressesProviderId
-      ),
-      address(0)
-    );
-  }
+        contracts.poolAddressesProviderRegistry.unregisterAddressesProvider(newAddressesProvider);
+        vm.stopPrank();
 
-  function testRemoveMultipleAddressesProvider() public {
-    address newAddressesProvider1 = makeAddr('NEW_PROVIDER_1');
-    address newAddressesProvider2 = makeAddr('NEW_PROVIDER_2');
-    address newAddressesProvider3 = makeAddr('NEW_PROVIDER_3');
-    uint256 newAddressesProviderId = 2020;
+        assertEq(contracts.poolAddressesProviderRegistry.getAddressesProvidersList().length, 1);
+        assertEq(contracts.poolAddressesProviderRegistry.getAddressesProviderIdByAddress(newAddressesProvider), 0);
+        assertEq(
+            contracts.poolAddressesProviderRegistry.getAddressesProviderAddressById(newAddressesProviderId), address(0)
+        );
+    }
 
-    vm.startPrank(poolAdmin);
-    contracts.poolAddressesProviderRegistry.registerAddressesProvider(
-      newAddressesProvider1,
-      newAddressesProviderId
-    );
-    contracts.poolAddressesProviderRegistry.registerAddressesProvider(
-      newAddressesProvider2,
-      newAddressesProviderId + 1
-    );
-    contracts.poolAddressesProviderRegistry.registerAddressesProvider(
-      newAddressesProvider3,
-      newAddressesProviderId + 2
-    );
+    function testRemoveMultipleAddressesProvider() public {
+        address newAddressesProvider1 = makeAddr("NEW_PROVIDER_1");
+        address newAddressesProvider2 = makeAddr("NEW_PROVIDER_2");
+        address newAddressesProvider3 = makeAddr("NEW_PROVIDER_3");
+        uint256 newAddressesProviderId = 2020;
 
-    vm.expectEmit(address(contracts.poolAddressesProviderRegistry));
-    emit IPoolAddressesProviderRegistry.AddressesProviderUnregistered(
-      newAddressesProvider2,
-      newAddressesProviderId + 1
-    );
+        vm.startPrank(poolAdmin);
+        contracts.poolAddressesProviderRegistry.registerAddressesProvider(newAddressesProvider1, newAddressesProviderId);
+        contracts.poolAddressesProviderRegistry
+            .registerAddressesProvider(newAddressesProvider2, newAddressesProviderId + 1);
+        contracts.poolAddressesProviderRegistry
+            .registerAddressesProvider(newAddressesProvider3, newAddressesProviderId + 2);
 
-    contracts.poolAddressesProviderRegistry.unregisterAddressesProvider(newAddressesProvider2);
-    vm.stopPrank();
+        vm.expectEmit(address(contracts.poolAddressesProviderRegistry));
+        emit AddressesProviderUnregistered(newAddressesProvider2, newAddressesProviderId + 1);
 
-    assertEq(
-      contracts.poolAddressesProviderRegistry.getAddressesProviderIdByAddress(
-        newAddressesProvider2
-      ),
-      0
-    );
-    assertEq(
-      contracts.poolAddressesProviderRegistry.getAddressesProviderAddressById(
-        newAddressesProviderId + 1
-      ),
-      address(0)
-    );
-  }
+        contracts.poolAddressesProviderRegistry.unregisterAddressesProvider(newAddressesProvider2);
+        vm.stopPrank();
 
-  function test_revert_removeNonExistingAddressesProvider() public {
-    address newAddressesProvider = makeAddr('NEW_PROVIDER');
+        assertEq(contracts.poolAddressesProviderRegistry.getAddressesProviderIdByAddress(newAddressesProvider2), 0);
+        assertEq(
+            contracts.poolAddressesProviderRegistry.getAddressesProviderAddressById(newAddressesProviderId + 1),
+            address(0)
+        );
+    }
 
-    vm.startPrank(poolAdmin);
-    vm.expectRevert();
-    contracts.poolAddressesProviderRegistry.unregisterAddressesProvider(newAddressesProvider);
-    vm.stopPrank();
+    function test_revert_removeNonExistingAddressesProvider() public {
+        address newAddressesProvider = makeAddr("NEW_PROVIDER");
 
-    assertEq(contracts.poolAddressesProviderRegistry.getAddressesProvidersList().length, 1);
-    assertEq(
-      contracts.poolAddressesProviderRegistry.getAddressesProviderIdByAddress(newAddressesProvider),
-      0
-    );
-  }
+        vm.startPrank(poolAdmin);
+        vm.expectRevert();
+        contracts.poolAddressesProviderRegistry.unregisterAddressesProvider(newAddressesProvider);
+        vm.stopPrank();
 
-  function test_removesLastProvider() public {
-    uint256 id = contracts.poolAddressesProviderRegistry.getAddressesProviderIdByAddress(
-      report.poolAddressesProvider
-    );
+        assertEq(contracts.poolAddressesProviderRegistry.getAddressesProvidersList().length, 1);
+        assertEq(contracts.poolAddressesProviderRegistry.getAddressesProviderIdByAddress(newAddressesProvider), 0);
+    }
 
-    vm.startPrank(poolAdmin);
-    contracts.poolAddressesProviderRegistry.unregisterAddressesProvider(
-      report.poolAddressesProvider
-    );
-    vm.stopPrank();
+    function test_removesLastProvider() public {
+        uint256 id =
+            contracts.poolAddressesProviderRegistry.getAddressesProviderIdByAddress(report.poolAddressesProvider);
 
-    assertEq(contracts.poolAddressesProviderRegistry.getAddressesProvidersList().length, 0);
-    assertEq(
-      contracts.poolAddressesProviderRegistry.getAddressesProviderAddressById(id),
-      address(0)
-    );
-    assertEq(
-      contracts.poolAddressesProviderRegistry.getAddressesProviderIdByAddress(
-        report.poolAddressesProvider
-      ),
-      0
-    );
-  }
+        vm.startPrank(poolAdmin);
+        contracts.poolAddressesProviderRegistry.unregisterAddressesProvider(report.poolAddressesProvider);
+        vm.stopPrank();
+
+        assertEq(contracts.poolAddressesProviderRegistry.getAddressesProvidersList().length, 0);
+        assertEq(contracts.poolAddressesProviderRegistry.getAddressesProviderAddressById(id), address(0));
+        assertEq(
+            contracts.poolAddressesProviderRegistry.getAddressesProviderIdByAddress(report.poolAddressesProvider), 0
+        );
+    }
 }

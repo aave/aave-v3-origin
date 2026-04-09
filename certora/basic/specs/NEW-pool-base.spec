@@ -40,7 +40,7 @@ methods {
   //function _.mint(address user, uint256 amount, uint256 index) external => DISPATCHER(true);
   function _.burn(address user, address receiverOfUnderlying, uint256 amount, uint256 index) external => DISPATCHER(true);
   function _.mintToTreasury(uint256 amount, uint256 index) external => DISPATCHER(true);
-  //  function _.transferOnLiquidation(address from, address to, uint256 value) external => DISPATCHER(true);
+  function _.transferOnLiquidation(address from, address to, uint256 value) external => DISPATCHER(true);
   function _.transferUnderlyingTo(address user, uint256 amount) external => DISPATCHER(true);
   //function _.handleRepayment(address user, uint256 amount) external => DISPATCHER(true);
   function _.permit(address owner, address spender, uint256 value, uint256 deadline, uint8 v, bytes32 r, bytes32 s) external => DISPATCHER(true);
@@ -99,7 +99,7 @@ function calculateCompoundedInterestSummary(uint256 rate, uint40 t0, uint256 t1)
 }
 
 function isActiveReserve(env e, address asset) returns bool {
-  DataTypes.ReserveDataLegacy data = getReserveData(e, asset);
+  DataTypes.ReserveData data = getReserveDataExtended(e, asset);
   DataTypes.ReserveConfigurationMap configuration = data.configuration;
   bool isActive = getActive(e, configuration);
 
@@ -107,7 +107,7 @@ function isActiveReserve(env e, address asset) returns bool {
 }
 
 function isFrozenReserve(env e, address asset) returns bool {
-  DataTypes.ReserveDataLegacy data = getReserveData(e, asset);
+  DataTypes.ReserveData data = getReserveDataExtended(e, asset);
   DataTypes.ReserveConfigurationMap configuration = data.configuration;
   bool isFrozen = getFrozen(e, configuration);
 
@@ -115,7 +115,7 @@ function isFrozenReserve(env e, address asset) returns bool {
 }
 
 function isEnabledForBorrow(env e, address asset) returns bool {
-  DataTypes.ReserveDataLegacy data = getReserveData(e, asset);
+  DataTypes.ReserveData data = getReserveDataExtended(e, asset);
   DataTypes.ReserveConfigurationMap configuration = data.configuration;
   bool isBorrowEnabled = getBorrowingEnabled(e, configuration);
 
@@ -123,12 +123,12 @@ function isEnabledForBorrow(env e, address asset) returns bool {
 }
 
 function getCurrentLiquidityRate(env e, address asset) returns mathint {
-  DataTypes.ReserveDataLegacy data = getReserveData(e, asset);
+  DataTypes.ReserveData data = getReserveDataExtended(e, asset);
   return data.currentLiquidityRate;
 }
 
 function getLiquidityIndex(env e, address asset) returns mathint {
-  DataTypes.ReserveDataLegacy data = getReserveData(e, asset);
+  DataTypes.ReserveData data = getReserveDataExtended(e, asset);
   return data.liquidityIndex;
 }
 

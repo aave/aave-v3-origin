@@ -5,7 +5,6 @@ import {PoolInstance} from '../munged/contracts/instances/PoolInstance.sol';
 import {DataTypes} from '../munged/contracts/protocol/libraries/types/DataTypes.sol';
 import {ReserveLogic} from '../munged/contracts/protocol/libraries/logic/ReserveLogic.sol';
 import {IPoolAddressesProvider} from '../munged/contracts/interfaces/IPoolAddressesProvider.sol';
-import {IReserveInterestRateStrategy} from '../munged/contracts/interfaces/IReserveInterestRateStrategy.sol';
 
 import {IERC20} from '../../../src/contracts/dependencies/openzeppelin/contracts/IERC20.sol';
 import {ReserveConfiguration} from '../munged/contracts/protocol/libraries/configuration/ReserveConfiguration.sol';
@@ -14,10 +13,7 @@ contract PoolHarness is PoolInstance {
   using ReserveLogic for DataTypes.ReserveData;
   using ReserveLogic for DataTypes.ReserveCache;
 
-  constructor(
-    IPoolAddressesProvider provider,
-    IReserveInterestRateStrategy interestRateStrategy_
-  ) public PoolInstance(provider, interestRateStrategy_) {}
+  constructor(IPoolAddressesProvider provider) public PoolInstance(provider) {}
 
   function getCurrScaledVariableDebt(address asset) public view returns (uint256) {
     DataTypes.ReserveData storage reserve = _reserves[asset];
@@ -57,6 +53,14 @@ contract PoolHarness is PoolInstance {
   ) public returns (bool) {
     ReserveLogic._updateIndexes(_reserves[asset], cache);
     return true;
+  }
+
+  function cumulateToLiquidityIndex(
+    address asset,
+    uint256 totalLiquidity,
+    uint256 amount
+  ) public returns (uint256) {
+    return ReserveLogic.cumulateToLiquidityIndex(_reserves[asset], totalLiquidity, amount);
   }
 
   function getActive(DataTypes.ReserveConfigurationMap memory self) external pure returns (bool) {

@@ -191,6 +191,18 @@ contract ReserveConfigurationHarness {
     return ReserveConfiguration.getLiquidationProtocolFee(reservesConfig);
   }
 
+  // Sets the unbacked mint cap of the reserve
+  function setUnbackedMintCap(uint256 unbackedMintCap) public {
+    DataTypes.ReserveConfigurationMap memory configNew = reservesConfig;
+    ReserveConfiguration.setUnbackedMintCap(configNew, unbackedMintCap);
+    reservesConfig.data = configNew.data;
+  }
+
+  // Gets the unbacked mint cap of the reserve
+  function getUnbackedMintCap() public view returns (uint256) {
+    return ReserveConfiguration.getUnbackedMintCap(reservesConfig);
+  }
+
   // Sets the eMode asset category
   //  function setEModeCategory(uint256 category) public {
   //  DataTypes.ReserveConfigurationMap memory configNew = reservesConfig;
@@ -222,7 +234,7 @@ contract ReserveConfigurationHarness {
 
   // Executes a setter of an int parameter according to the given id
   function executeIntSetterById(uint256 id, uint256 val) public {
-    require(id >= 0 && id <= 8);
+    require(id >= 0 && id <= 10);
     if (id == 0) {
       setLtv(val);
     } else if (id == 1) {
@@ -240,7 +252,9 @@ contract ReserveConfigurationHarness {
     } else if (id == 7) {
       setLiquidationProtocolFee(val);
       //    } else if (id == 8) {
-      // setUnbackedMintCap(val);
+      //setEModeCategory(val);
+    } else if (id == 8) {
+      setUnbackedMintCap(val);
     } else {
       setDebtCeiling(val);
     }
@@ -248,7 +262,7 @@ contract ReserveConfigurationHarness {
 
   // Executes a getter of an int parameter according to the given id
   function executeIntGetterById(uint256 id) public view returns (uint256) {
-    require(id >= 0 && id <= 8);
+    require(id >= 0 && id <= 10);
     if (id == 0) {
       return getLtv();
     } else if (id == 1) {
@@ -266,7 +280,9 @@ contract ReserveConfigurationHarness {
     } else if (id == 7) {
       return getLiquidationProtocolFee();
       //    } else if (id == 8) {
-      //return getUnbackedMintCap();
+      //return getEModeCategory();
+    } else if (id == 8) {
+      return getUnbackedMintCap();
     } else {
       return getDebtCeiling();
     }

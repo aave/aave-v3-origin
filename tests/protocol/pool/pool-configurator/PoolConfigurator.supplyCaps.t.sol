@@ -1,140 +1,133 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity ^0.8.0;
 
-import 'forge-std/Test.sol';
+import "forge-std/Test.sol";
 
-import {Errors} from '../../../../src/contracts/protocol/libraries/helpers/Errors.sol';
-import {IERC20} from '../../../../src/contracts/dependencies/openzeppelin/contracts/IERC20.sol';
-import {IPoolConfigurator} from '../../../../src/contracts/interfaces/IPoolConfigurator.sol';
-import {TestnetProcedures} from '../../../utils/TestnetProcedures.sol';
+import {Errors} from "../../../../src/contracts/protocol/libraries/helpers/Errors.sol";
+import {IERC20} from "../../../../src/contracts/dependencies/openzeppelin/contracts/IERC20.sol";
+import {TestnetProcedures} from "../../../utils/TestnetProcedures.sol";
 
 contract PoolConfiguratorSupplyCapTests is TestnetProcedures {
-  address internal aUSDX;
+    address internal aUSDX;
 
-  uint256 constant MAX_SUPPLY_CAP = 68719476735;
+    uint256 constant MAX_SUPPLY_CAP = 68719476735;
 
-  function setUp() public {
-    initTestEnvironment();
+    event SupplyCapChanged(address indexed asset, uint256 oldSupplyCap, uint256 newSupplyCap);
 
-    aUSDX = contracts.poolProxy.getReserveAToken(tokenList.usdx);
-  }
+    function setUp() public {
+        initTestEnvironment();
 
-  function _setSupplyCapAction(address admin, address token, uint256 amount) internal {
-    (, uint256 previousCap) = contracts.protocolDataProvider.getReserveCaps(token);
-    vm.expectEmit(address(contracts.poolConfiguratorProxy));
-    emit IPoolConfigurator.SupplyCapChanged(token, previousCap, amount);
+        (aUSDX,,) = contracts.protocolDataProvider.getReserveTokensAddresses(tokenList.usdx);
+    }
 
-    vm.prank(admin);
-    contracts.poolConfiguratorProxy.setSupplyCap(token, amount);
+    function _setSupplyCapAction(address admin, address token, uint256 amount) internal {
+        (, uint256 previousCap) = contracts.protocolDataProvider.getReserveCaps(token);
+        vm.expectEmit(address(contracts.poolConfiguratorProxy));
+        emit SupplyCapChanged(token, previousCap, amount);
 
-    (, uint256 newCap) = contracts.protocolDataProvider.getReserveCaps(token);
-    assertEq(newCap, amount, 'Cap should match cap amount passed by argument');
-  }
+        vm.prank(admin);
+        contracts.poolConfiguratorProxy.setSupplyCap(token, amount);
 
-  function test_default_supplyCap_zero() public view {
-    (, uint256 supplyCapUsdx) = contracts.protocolDataProvider.getReserveCaps(tokenList.usdx);
-    assertEq(supplyCapUsdx, 0, 'Default supply cap should be zero');
-  }
+        (, uint256 newCap) = contracts.protocolDataProvider.getReserveCaps(token);
+        assertEq(newCap, amount, "Cap should match cap amount passed by argument");
+    }
 
-  function test_reverts_unauthorized_setSupplyCap() public {
-    vm.expectRevert(abi.encodeWithSelector(Errors.CallerNotRiskOrPoolAdmin.selector));
+    function test_default_supplyCap_zero() public view {
+        (, uint256 supplyCapUsdx) = contracts.protocolDataProvider.getReserveCaps(tokenList.usdx);
+        assertEq(supplyCapUsdx, 0, "Default supply cap should be zero");
+    }
 
-    vm.prank(bob);
-    contracts.poolConfiguratorProxy.setSupplyCap(tokenList.usdx, 10);
-  }
+    function test_reverts_unauthorized_setSupplyCap() public {
+        vm.expectRevert(bytes(Errors.CALLER_NOT_RISK_OR_POOL_ADMIN));
 
-  function test_setSupplyCap() public {
-    _setSupplyCapAction(poolAdmin, tokenList.usdx, 10);
-  }
+        vm.prank(bob);
+        contracts.poolConfiguratorProxy.setSupplyCap(tokenList.usdx, 10);
+    }
 
-  function test_supply_lt_cap() public {
-    _setSupplyCapAction(poolAdmin, tokenList.usdx, 4000);
+    function test_setSupplyCap() public {
+        _setSupplyCapAction(poolAdmin, tokenList.usdx, 10);
+    }
 
-    vm.prank(alice);
-    contracts.poolProxy.supply(tokenList.usdx, 1250e6, alice, 0);
+    function test_supply_lt_cap() public {
+        _setSupplyCapAction(poolAdmin, tokenList.usdx, 4000);
 
-    assertEq(IERC20(aUSDX).balanceOf(alice), 1250e6, 'Alice balance should match supply amount');
-  }
+        vm.prank(alice);
+        contracts.poolProxy.supply(tokenList.usdx, 1250e6, alice, 0);
 
-  function test_supply_eq_cap() public {
-    _setSupplyCapAction(poolAdmin, tokenList.usdx, 6000);
+        assertEq(IERC20(aUSDX).balanceOf(alice), 1250e6, "Alice balance should match supply amount");
+    }
 
-    vm.prank(alice);
-    contracts.poolProxy.supply(tokenList.usdx, 6000e6, alice, 0);
+    function test_supply_eq_cap() public {
+        _setSupplyCapAction(poolAdmin, tokenList.usdx, 6000);
 
-    assertEq(IERC20(aUSDX).balanceOf(alice), 6000e6, 'Alice balance should match supply amount');
-  }
+        vm.prank(alice);
+        contracts.poolProxy.supply(tokenList.usdx, 6000e6, alice, 0);
 
-  function test_supply_interests_reach_cap() public {
-    _setSupplyCapAction(poolAdmin, tokenList.usdx, 5000);
+        assertEq(IERC20(aUSDX).balanceOf(alice), 6000e6, "Alice balance should match supply amount");
+    }
 
-    vm.prank(alice);
-    contracts.poolProxy.supply(tokenList.usdx, 5000e6, alice, 0);
+    function test_supply_interests_reach_cap() public {
+        _setSupplyCapAction(poolAdmin, tokenList.usdx, 5000);
 
-    assertEq(IERC20(aUSDX).balanceOf(alice), 5000e6, 'Alice balance should match borrow amount');
+        vm.prank(alice);
+        contracts.poolProxy.supply(tokenList.usdx, 5000e6, alice, 0);
 
-    vm.prank(alice);
-    contracts.poolProxy.borrow(tokenList.usdx, 100e6, 2, 0, alice);
+        assertEq(IERC20(aUSDX).balanceOf(alice), 5000e6, "Alice balance should match borrow amount");
 
-    vm.warp(vm.getBlockTimestamp() + 30 days);
+        vm.prank(alice);
+        contracts.poolProxy.borrow(tokenList.usdx, 100e6, 2, 0, alice);
 
-    uint256 totalCollateral = IERC20(aUSDX).totalSupply();
+        vm.warp(block.timestamp + 30 days);
 
-    (, uint256 supplyCapUsdx) = contracts.protocolDataProvider.getReserveCaps(tokenList.usdx);
+        uint256 totalCollateral = IERC20(aUSDX).totalSupply();
 
-    assertGt(totalCollateral, supplyCapUsdx * 10 ** 6, 'Total supplied should be greater than cap');
-  }
+        (, uint256 supplyCapUsdx) = contracts.protocolDataProvider.getReserveCaps(tokenList.usdx);
 
-  function test_setSupplyCap_them_setBorrowCap_zero() public {
-    _setSupplyCapAction(poolAdmin, tokenList.usdx, 100);
-    _setSupplyCapAction(poolAdmin, tokenList.usdx, 0);
+        assertGt(totalCollateral, supplyCapUsdx * 10 ** 6, "Total supplied should be greater than cap");
+    }
 
-    vm.prank(alice);
-    contracts.poolProxy.supply(tokenList.usdx, 5000e6, alice, 0);
+    function test_setSupplyCap_them_setBorrowCap_zero() public {
+        _setSupplyCapAction(poolAdmin, tokenList.usdx, 100);
+        _setSupplyCapAction(poolAdmin, tokenList.usdx, 0);
 
-    assertEq(
-      IERC20(aUSDX).balanceOf(alice),
-      5000e6,
-      'Alice supplied balance should match supply amount'
-    );
-  }
+        vm.prank(alice);
+        contracts.poolProxy.supply(tokenList.usdx, 5000e6, alice, 0);
 
-  function test_multiple_setSupplyCap() public {
-    _setSupplyCapAction(poolAdmin, tokenList.usdx, 100);
-    _setSupplyCapAction(poolAdmin, tokenList.usdx, 4000);
-    _setSupplyCapAction(poolAdmin, tokenList.usdx, 20000);
-    _setSupplyCapAction(poolAdmin, tokenList.usdx, 6000);
+        assertEq(IERC20(aUSDX).balanceOf(alice), 5000e6, "Alice supplied balance should match supply amount");
+    }
 
-    vm.prank(alice);
-    contracts.poolProxy.supply(tokenList.usdx, 5000e6, alice, 0);
+    function test_multiple_setSupplyCap() public {
+        _setSupplyCapAction(poolAdmin, tokenList.usdx, 100);
+        _setSupplyCapAction(poolAdmin, tokenList.usdx, 4000);
+        _setSupplyCapAction(poolAdmin, tokenList.usdx, 20000);
+        _setSupplyCapAction(poolAdmin, tokenList.usdx, 6000);
 
-    assertEq(
-      IERC20(aUSDX).balanceOf(alice),
-      5000e6,
-      'Alice supplied balance should match supply amount'
-    );
-  }
+        vm.prank(alice);
+        contracts.poolProxy.supply(tokenList.usdx, 5000e6, alice, 0);
 
-  function test_reverts_supply_gt_cap() public {
-    _setSupplyCapAction(poolAdmin, tokenList.usdx, 5000);
+        assertEq(IERC20(aUSDX).balanceOf(alice), 5000e6, "Alice supplied balance should match supply amount");
+    }
 
-    vm.expectRevert(abi.encodeWithSelector(Errors.SupplyCapExceeded.selector));
-    vm.prank(bob);
-    contracts.poolProxy.supply(tokenList.usdx, 6000e6, bob, 0);
-  }
+    function test_reverts_supply_gt_cap() public {
+        _setSupplyCapAction(poolAdmin, tokenList.usdx, 5000);
 
-  function test_reverts_interests_gt_cap_and_supply() public {
-    test_supply_interests_reach_cap();
+        vm.expectRevert(bytes(Errors.SUPPLY_CAP_EXCEEDED));
+        vm.prank(bob);
+        contracts.poolProxy.supply(tokenList.usdx, 6000e6, bob, 0);
+    }
 
-    vm.expectRevert(abi.encodeWithSelector(Errors.SupplyCapExceeded.selector));
-    vm.prank(alice);
-    contracts.poolProxy.supply(tokenList.usdx, 1e6, alice, 0);
-  }
+    function test_reverts_interests_gt_cap_and_supply() public {
+        test_supply_interests_reach_cap();
 
-  function test_reverts_setSupplyCap_gt_max_cap() public {
-    vm.expectRevert(abi.encodeWithSelector(Errors.InvalidSupplyCap.selector));
+        vm.expectRevert(bytes(Errors.SUPPLY_CAP_EXCEEDED));
+        vm.prank(alice);
+        contracts.poolProxy.supply(tokenList.usdx, 1e6, alice, 0);
+    }
 
-    vm.prank(poolAdmin);
-    contracts.poolConfiguratorProxy.setSupplyCap(tokenList.usdx, MAX_SUPPLY_CAP + 1);
-  }
+    function test_reverts_setSupplyCap_gt_max_cap() public {
+        vm.expectRevert(bytes(Errors.INVALID_SUPPLY_CAP));
+
+        vm.prank(poolAdmin);
+        contracts.poolConfiguratorProxy.setSupplyCap(tokenList.usdx, MAX_SUPPLY_CAP + 1);
+    }
 }

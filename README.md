@@ -4,12 +4,45 @@
 
 Aave v3.3 complete codebase, Foundry-based.
 
-[![codecov](https://codecov.io/gh/aave-dao/aave-v3-origin/graph/badge.svg?token=6HX4NXCNIQ)](https://codecov.io/gh/aave-dao/aave-v3-origin)
+## Fork Information
+
+This repository is a fork of [Aave v3 Origin](https://github.com/aave-dao/aave-v3-origin).
+
+- **Base version**: v3.3.0
+- **Upstream commit**: `5431379f8beb4d7128c84a81ced3917d856efa84`
+- **Fork date**: 2025-02-24
+- **Upstream repository**: [aave-dao/aave-v3-origin](https://github.com/aave-dao/aave-v3-origin)
+
+[![Coverage badge](./report/coverage.svg)](https://aave-dao.github.io/aave-v3-origin)
 <br>
 
-## Contributing
+## Dependencies
 
-If you're interested in contributing, please read the [contributing docs](/.github/CONTRIBUTING.md) **before submitting a pull request**.
+- Foundry, [how-to install](https://book.getfoundry.sh/getting-started/installation) (we recommend also update to the last version with `foundryup`)
+- Lcov
+  - Optional, only needed for coverage testing
+  - For Ubuntu, you can install via `apt install lcov`
+  - For Mac, you can install via `brew install lcov`
+
+<br>
+
+## Setup
+
+```sh
+cp .env.example .env
+
+forge install
+
+# required for tests & linting
+npm install
+```
+
+<br>
+
+## Tests
+
+- To run the full test suite: `make test`
+- To re-generate the coverage report: `make coverage`
 
 <br>
 
@@ -17,16 +50,16 @@ If you're interested in contributing, please read the [contributing docs](/.gith
 
 - [Aave v3 technical Paper](./docs/Aave_V3_Technical_Paper.pdf)
 - [v3 to v3.0.2 production upgrade](https://github.com/bgd-labs/proposal-3.0.2-upgrade/blob/main/README.md)
-- [Aave v3.1 features](./docs/3.1/Aave-v3.1-features.md)
-- [Aave v3.2 features](./docs/3.2/Aave-3.2-features.md)
-- [Aave v3.3 features](./docs/3.3/Aave-v3.3-features.md)
-- [v3.1 to v3.2 production upgrade](https://github.com/bgd-labs/protocol-3.2.0-upgrade/blob/main/README.md)
-- [v3.2 to v3.3 production upgrade](https://github.com/bgd-labs/protocol-3.3.0-upgrade/blob/main/README.md)
+- [Aave v3.1 features](./docs/Aave-v3.1-features.md)
+- [Aave v3.2 features](./docs/3.2/Aave-v3.2-features.md)
+- [v3.1 to v3.2.0 production upgrade](https://github.com/bgd-labs/protocol-3.2.0-upgrade/blob/main/README.md)
 - [Set Ltv to 0 on Freeze Feature State diagram](./docs/freeze-ltv0-states.png)
 
 <br>
 
 ## Security
+
+Aave v3.1 is an upgraded version of Aave v3, more precisely on top of the initial Aave v3 release and a follow-up 3.0.2 later update.
 
 The following are the security procedures historically applied to Aave v3.X versions.
 
@@ -92,17 +125,6 @@ The following are the security procedures historically applied to Aave v3.X vers
 - [Sherlock](./audits/2025-01-22_Sherlock_Aave-v3.3.0.pdf)
 
 In addition, Enigma Dark has adapted the Foundry-based fuzzing [invariant suite](./tests/invariants) to the Aave v3.3 codebase.
-
-<br>
-
-**-> Aave v3.4 - June 2025**
-
-#### Removal of custom GHO. Addition of Multicall & Position manager
-
-- [Certora v3.4](./audits/2025-06-11_Certora_Aave-v3.4_Report.pdf), [Certora v3.4 AIP](./audits/2025-06-11_Certora_Aave-v3.4_AIP_Report.pdf)
-- [StErMi v3.4](./audits/2025-06-11_Stermi_Aave-v3.4_Report.pdf), [StErMi v3.4 AIP](./audits/2025-06-11_Stermi_Aave-v3.4_AIP_Report.pdf)
-- [Blackthorn](./audits/2025-06-12_Blackthorn-v3.4_Report.pdf)
-- [Enigma](./audits/2025-05-13_Enigma_Aave-v3.4.pdf)
 
 <br>
 

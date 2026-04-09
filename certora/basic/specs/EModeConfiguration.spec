@@ -56,3 +56,5 @@ rule independencyOfBorrowableSetters(uint256 reserveIndex, bool borrowable) {
   assert (reserveIndex != reserveIndex_other => before == after);
 }
 
+
+
