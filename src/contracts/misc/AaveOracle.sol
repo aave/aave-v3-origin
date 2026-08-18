@@ -19,6 +19,9 @@ import {IAaveOracle} from '../interfaces/IAaveOracle.sol';
 contract AaveOracle is IAaveOracle {
   IPoolAddressesProvider public immutable ADDRESSES_PROVIDER;
 
+  // Maximum staleness allowed for oracle prices (1 hour)
+  uint256 public constant MAX_STALENESS = 3600;
+
   // Map of asset price sources (asset => priceSource)
   mapping(address => AggregatorInterface) private assetsSources;
 
@@ -106,8 +109,8 @@ contract AaveOracle is IAaveOracle {
     } else if (address(source) == address(0)) {
       return _fallbackOracle.getAssetPrice(asset);
     } else {
-      int256 price = source.latestAnswer();
-      if (price > 0) {
+      (, int256 price,, uint256 updatedAt,) = source.latestRoundData();
+      if (price > 0 && block.timestamp - updatedAt < MAX_STALENESS) {
         return uint256(price);
       } else {
         return _fallbackOracle.getAssetPrice(asset);
